@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GENERAL ONLINE - Local</title>
+    <title>GENERAL ONLINE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .score-input { width: 100%; padding: 0.5rem; text-align: center; border: 1px solid #d1d5db; border-radius: 0.375rem; font-weight: 600; }
+        .score-input { width: 100%; padding: 0.5rem; text-align: center; border: 1px solid #d1d5db; border-radius: 0.375rem; transition: all 0.2s; font-weight: 600; }
         .score-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5); }
-        .score-input:disabled { background-color: #e5e7eb; cursor: not-allowed; }
-        .category-header { background-color: #e5e7eb; font-weight: 600; padding: 0.75rem; min-width: 100px; }
+        .score-input:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.6; }
+        .score-input.invalid { border-color: #ef4444; background-color: #fee2e2; }
+        .category-header { background-color: #e5e7eb; font-weight: 600; padding: 0.75rem; min-width: 110px; }
         .separator-row td { border-top: 4px solid #4b5563; }
         .total-final td { font-weight: 800; background-color: #10b981; color: white; font-size: 1.25rem; }
-        .bonus-label { font-size: 0.75rem; font-weight: 600; color: #dc2626; }
+        .bonus-label { font-size: 0.75rem; font-weight: 600; color: #dc2626; min-width: 20px; }
+        .zero-label { font-size: 0.75rem; font-weight: 600; color: #4b5563; }
     </style>
 </head>
 <body class="p-4 sm:p-8">
@@ -22,9 +24,10 @@
     <div id="setup-modal" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50">
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
             <h2 class="text-2xl font-bold mb-4 text-gray-800">Configurar Jogadores</h2>
+            <p class="text-sm text-gray-600 mb-4">Mínimo 2, máximo 6 jogadores.</p>
             <div id="player-inputs-container" class="space-y-4 mb-4"></div>
             <div class="flex space-x-2 mb-6">
-                <button id="add-player-btn" class="flex-1 bg-gray-300 py-2 rounded-lg font-semibold hover:bg-gray-400">+ Jogador</button>
+                <button id="add-player-btn" class="flex-1 bg-gray-300 py-2 rounded-lg font-semibold hover:bg-gray-400">+ Adicionar</button>
                 <button id="remove-player-btn" class="flex-1 bg-red-400 text-white py-2 rounded-lg font-semibold hover:bg-red-500">- Remover</button>
             </div>
             <button id="start-game-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 shadow-md">Iniciar Jogo</button>
@@ -32,149 +35,198 @@
     </div>
 
     <header class="text-center mb-8">
-        <h1 class="text-4xl font-extrabold text-gray-900">GENERAL ONLINE</h1>
-        <button onclick="resetGame()" class="mt-2 text-sm text-red-600 underline">Reiniciar Tudo</button>
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">GENERAL ONLINE</h1>
+        <div id="game-status" class="text-sm font-medium text-blue-600 uppercase tracking-wider">Aguardando Início</div>
     </header>
 
     <div id="app-content" class="max-w-4xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-2xl hidden">
         <div class="overflow-x-auto">
             <table id="score-table" class="min-w-full divide-y divide-gray-200 border-collapse"></table>
         </div>
+        <div class="mt-6 flex justify-center">
+            <button onclick="resetGame()" class="text-red-500 hover:text-red-700 text-sm font-semibold underline">Reiniciar Partida</button>
+        </div>
     </div>
 
     <script>
-        // Configurações e Variáveis
-        const CATEGORIES_SIMPLES = ['um', 'dois', 'tres', 'quatro', 'cinco', 'seis'];
-        const CATEGORIES_COMBINACAO = ['sequencia', 'fullhouse', 'quadra', 'general'];
-        const CATEGORY_LABELS = { um:'1s', dois:'2s', tres:'3s', quatro:'4s', cinco:'5s', seis:'6s', sequencia:'Sequência', fullhouse:'Fula', quadra:'Poker', general:'General' };
+        // --- Regras e Configurações ---
+        const CAT_SIMPLES = ['um', 'dois', 'tres', 'quatro', 'cinco', 'seis'];
+        const CAT_VAL = { um:1, dois:2, tres:3, quatro:4, cinco:5, seis:6 };
+        const CAT_COMBO = ['sequencia', 'fullhouse', 'quadra', 'general'];
+        const CAT_LABELS = { um:'1s', dois:'2s', tres:'3s', quatro:'4s', cinco:'5s', seis:'6s', sequencia:'Sequência', fullhouse:'Fula', quadra:'Poker', general:'General' };
         const FIXED_SCORES = { sequencia: 25, fullhouse: 35, quadra: 40, general: 50 };
-        
-        let gameState = JSON.parse(localStorage.getItem('general_game')) || {
-            activePlayerKeys: ['p1', 'p2'],
-            playerNames: { p1: '', p2: '' },
+
+        let gameState = JSON.parse(localStorage.getItem('general_v1_rules')) || {
+            activeKeys: ['p1', 'p2'],
+            names: { p1: '', p2: '' },
             scores: {},
-            gameStarted: false
+            started: false
         };
 
-        const container = document.getElementById('player-inputs-container');
-
+        // --- Gerenciamento de Jogadores ---
         function renderSetup() {
+            const container = document.getElementById('player-inputs-container');
             container.innerHTML = '';
-            gameState.activePlayerKeys.forEach(key => {
+            gameState.activeKeys.forEach(key => {
                 container.innerHTML += `
                     <div>
-                        <label class="block text-sm font-medium">Nome do Jogador ${key.slice(1)}</label>
-                        <input type="text" id="name-${key}" value="${gameState.playerNames[key] || ''}" class="mt-1 block w-full border p-2 rounded-md">
+                        <label class="block text-xs font-bold text-gray-500 uppercase">Jogador ${key.slice(1)}</label>
+                        <input type="text" id="input-${key}" value="${gameState.names[key] || ''}" placeholder="Nome do Jogador" class="mt-1 block w-full border p-2 rounded-md shadow-sm">
                     </div>`;
             });
         }
 
         document.getElementById('add-player-btn').onclick = () => {
-            if (gameState.activePlayerKeys.length < 6) {
-                const newKey = `p${gameState.activePlayerKeys.length + 1}`;
-                gameState.activePlayerKeys.push(newKey);
+            if (gameState.activeKeys.length < 6) {
+                gameState.activeKeys.push(`p${gameState.activeKeys.length + 1}`);
                 renderSetup();
             }
         };
 
         document.getElementById('remove-player-btn').onclick = () => {
-            if (gameState.activePlayerKeys.length > 2) {
-                gameState.activePlayerKeys.pop();
+            if (gameState.activeKeys.length > 2) {
+                gameState.activeKeys.pop();
                 renderSetup();
             }
         };
 
         document.getElementById('start-game-btn').onclick = () => {
-            gameState.activePlayerKeys.forEach(key => {
-                gameState.playerNames[key] = document.getElementById(`name-${key}`).value || key.toUpperCase();
+            gameState.activeKeys.forEach(key => {
+                gameState.names[key] = document.getElementById(`input-${key}`).value || `JOGADOR ${key.slice(1)}`;
             });
-            gameState.gameStarted = true;
+            gameState.started = true;
             saveAndRender();
         };
 
+        // --- Lógica Principal ---
         function saveAndRender() {
-            localStorage.setItem('general_game', JSON.stringify(gameState));
-            if (gameState.gameStarted) {
+            localStorage.setItem('general_v1_rules', JSON.stringify(gameState));
+            if (gameState.started) {
                 document.getElementById('setup-modal').classList.add('hidden');
                 document.getElementById('app-content').classList.remove('hidden');
+                updateStatus();
                 renderTable();
             } else {
                 renderSetup();
             }
         }
 
+        function updateStatus() {
+            let finished = true;
+            gameState.activeKeys.forEach(p => {
+                if (gameState.scores[p]?.general === undefined || (typeof gameState.scores[p].general === 'object' && !gameState.scores[p].general.cancelled && !gameState.scores[p].general.scored)) {
+                    finished = false;
+                }
+            });
+            document.getElementById('game-status').innerText = finished ? "STATUS: PARTIDA FINALIZADA" : "STATUS: JOGO EM ANDAMENTO";
+        }
+
         function renderTable() {
             const table = document.getElementById('score-table');
             let html = `<thead><tr><th class="category-header border-r">Categoria</th>`;
-            gameState.activePlayerKeys.forEach(key => {
-                html += `<th class="category-header text-center">${gameState.playerNames[key]}</th>`;
-            });
+            gameState.activeKeys.forEach(k => html += `<th class="category-header text-center">${gameState.names[k]}</th>`);
             html += `</tr></thead><tbody>`;
 
-            // Linhas Simples
-            CATEGORIES_SIMPLES.forEach(cat => {
-                html += `<tr><td class="p-2 border-r font-medium">${CATEGORY_LABELS[cat]}</td>`;
-                gameState.activePlayerKeys.forEach(key => {
-                    const val = gameState.scores[key]?.[cat] ?? '';
-                    html += `<td class="p-1"><input type="number" onchange="updateScore('${key}','${cat}',this.value)" value="${val}" class="score-input"></td>`;
-                });
-                html += `</tr>`;
-            });
+            // Categorias Simples (1s-6s)
+            CAT_SIMPLES.forEach(cat => {
+                html += `<tr><td class="p-2 border-r font-medium text-gray-700">${CAT_LABELS[cat]}</td>`;
+                gameState.activeKeys.forEach(p => {
+                    const score = gameState.scores[p]?.[cat];
+                    const isZero = score === 0;
+                    const val = (score === null || score === undefined || isZero) ? '' : score;
+                    const isValid = validateSimple(cat, val);
 
-            // Linhas Combinação
-            CATEGORIES_COMBINACAO.forEach((cat, idx) => {
-                html += `<tr class="${idx === 0 ? 'separator-row' : ''}"><td class="p-2 border-r font-medium">${CATEGORY_LABELS[cat]}</td>`;
-                gameState.activePlayerKeys.forEach(key => {
-                    const data = gameState.scores[key]?.[cat] || { scored: false, bonus: false };
-                    const points = data.scored ? (FIXED_SCORES[cat] + (data.bonus ? 5 : 0)) : 0;
                     html += `<td class="p-1">
-                        <div class="flex items-center justify-around">
-                            <span class="font-bold w-8">${points}</span>
-                            <input type="checkbox" ${data.scored ? 'checked' : ''} onchange="updateCombo('${key}','${cat}','scored',this.checked)" class="w-5 h-5">
-                            <input type="checkbox" ${data.bonus ? 'checked' : ''} ${!data.scored ? 'disabled' : ''} onchange="updateCombo('${key}','${cat}','bonus',this.checked)" class="w-4 h-4">
-                            <span class="bonus-label">+5</span>
+                        <div class="flex items-center gap-1">
+                            <input type="checkbox" onchange="toggleZeroSimple('${p}','${cat}',this.checked)" ${isZero?'checked':''} class="w-4 h-4 cursor-pointer">
+                            <span class="zero-label">0</span>
+                            <input type="number" oninput="updateSimple('${p}','${cat}',this.value)" value="${val}" ${isZero?'disabled':''} 
+                                class="score-input ${(!isValid && val !== '') ? 'invalid' : ''}" placeholder="-">
                         </div>
                     </td>`;
                 });
                 html += `</tr>`;
             });
 
-            // Total
-            html += `<tr class="total-final"><td class="p-2 border-r">TOTAL</td>`;
-            gameState.activePlayerKeys.forEach(key => {
-                html += `<td class="text-center" id="total-${key}">${calculateTotal(key)}</td>`;
+            // Categorias Combinação
+            CAT_COMBO.forEach((cat, idx) => {
+                html += `<tr class="${idx === 0 ? 'separator-row' : ''}"><td class="p-2 border-r font-medium text-gray-700">${CAT_LABELS[cat]}</td>`;
+                gameState.activeKeys.forEach(p => {
+                    const d = gameState.scores[p]?.[cat] || { scored: false, bonus: false, cancelled: false };
+                    const pts = d.cancelled ? 0 : (d.scored ? (FIXED_SCORES[cat] + (d.bonus ? 5 : 0)) : 0);
+
+                    html += `<td class="p-1">
+                        <div class="flex items-center justify-between px-1">
+                            <div class="flex items-center gap-0.5">
+                                <input type="checkbox" ${d.cancelled?'checked':''} onchange="updateCombo('${p}','${cat}','cancelled',this.checked)" class="w-4 h-4 cursor-pointer">
+                                <span class="zero-label">0</span>
+                            </div>
+                            <span class="font-bold text-sm w-6 text-center">${pts}</span>
+                            <input type="checkbox" ${d.scored?'checked':''} ${d.cancelled?'disabled':''} onchange="updateCombo('${p}','${cat}','scored',this.checked)" class="w-5 h-5 cursor-pointer">
+                            <div class="flex items-center">
+                                <input type="checkbox" ${d.bonus?'checked':''} ${(!d.scored || d.cancelled)?'disabled':''} onchange="updateCombo('${p}','${cat}','bonus',this.checked)" class="w-4 h-4 cursor-pointer">
+                                <span class="bonus-label ml-0.5">+5</span>
+                            </div>
+                        </div>
+                    </td>`;
+                });
+                html += `</tr>`;
             });
+
+            // Linha Total
+            html += `<tr class="total-final"><td class="p-2 border-r">TOTAL FINAL</td>`;
+            gameState.activeKeys.forEach(p => html += `<td class="text-center font-bold">${calculateTotal(p)}</td>`);
             html += `</tr></tbody>`;
             table.innerHTML = html;
         }
 
-        window.updateScore = (player, cat, val) => {
-            if (!gameState.scores[player]) gameState.scores[player] = {};
-            gameState.scores[player][cat] = val === '' ? null : parseInt(val);
+        // --- Funções de Validação e Cálculo ---
+        function validateSimple(cat, val) {
+            if (val === '' || val === null) return true;
+            const n = parseInt(val);
+            const b = CAT_VAL[cat];
+            return n % b === 0 && n <= (b * 5) && n > 0;
+        }
+
+        window.toggleZeroSimple = (p, cat, checked) => {
+            if (!gameState.scores[p]) gameState.scores[p] = {};
+            gameState.scores[p][cat] = checked ? 0 : null;
             saveAndRender();
         };
 
-        window.updateCombo = (player, cat, type, val) => {
-            if (!gameState.scores[player]) gameState.scores[player] = {};
-            if (!gameState.scores[player][cat]) gameState.scores[player][cat] = { scored: false, bonus: false };
-            gameState.scores[player][cat][type] = val;
-            if (type === 'scored' && !val) gameState.scores[player][cat].bonus = false;
+        window.updateSimple = (p, cat, val) => {
+            if (!gameState.scores[p]) gameState.scores[p] = {};
+            gameState.scores[p][cat] = val === '' ? null : parseInt(val);
             saveAndRender();
         };
 
-        function calculateTotal(player) {
-            let total = 0;
-            const s = gameState.scores[player] || {};
-            CATEGORIES_SIMPLES.forEach(c => total += (parseInt(s[c]) || 0));
-            CATEGORIES_COMBINACAO.forEach(c => {
-                if (s[c]?.scored) total += (FIXED_SCORES[c] + (s[c].bonus ? 5 : 0));
+        window.updateCombo = (p, cat, field, val) => {
+            if (!gameState.scores[p]) gameState.scores[p] = {};
+            if (!gameState.scores[p][cat]) gameState.scores[p][cat] = { scored: false, bonus: false, cancelled: false };
+            
+            gameState.scores[p][cat][field] = val;
+            if (field === 'cancelled' && val) {
+                gameState.scores[p][cat].scored = false;
+                gameState.scores[p][cat].bonus = false;
+            }
+            if (field === 'scored' && !val) gameState.scores[p][cat].bonus = false;
+            saveAndRender();
+        };
+
+        function calculateTotal(p) {
+            let t = 0;
+            const s = gameState.scores[p] || {};
+            CAT_SIMPLES.forEach(c => { if(validateSimple(c, s[c])) t += (parseInt(s[c]) || 0); });
+            CAT_COMBO.forEach(c => {
+                const d = s[c];
+                if (d?.scored && !d?.cancelled) t += (FIXED_SCORES[c] + (d.bonus ? 5 : 0));
             });
-            return total;
+            return t;
         }
 
         function resetGame() {
-            if(confirm("Deseja zerar o placar e voltar para o início?")) {
-                localStorage.removeItem('general_game');
+            if (confirm("Deseja apagar os dados e reiniciar?")) {
+                localStorage.removeItem('general_v1_rules');
                 location.reload();
             }
         }
