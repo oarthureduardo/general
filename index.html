@@ -3,990 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GENERAL ONLINE</title>
-    <!-- Carrega Tailwind CSS para estilização moderna e responsiva -->
+    <title>GENERAL ONLINE - Local</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configuração da fonte Inter -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Cinza claro de fundo */
-        }
-        .score-input {
-            width: 100%;
-            padding: 0.5rem 0.5rem;
-            text-align: center;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            transition: all 0.2s;
-            font-weight: 600;
-        }
-        .score-input:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5);
-        }
-        .score-input:disabled {
-             background-color: #f3f4f6;
-             cursor: not-allowed;
-        }
-        .score-cell {
-            padding: 0;
-            line-height: 1; /* Garante que o input preencha a célula */
-        }
-        .category-header {
-            background-color: #e5e7eb;
-            font-weight: 600;
-            padding: 0.75rem 0.5rem;
-            min-width: 100px; /* Garante que o nome do jogador caiba */
-            white-space: nowrap; /* Evita quebras de linha em nomes curtos */
-        }
-        /* Estilo para a linha divisória - Borda Grossa */
-        .separator-row td {
-            border-top: 4px solid #4b5563; /* Cinza escuro e espesso */
-        }
-        .calculated-row td {
-            font-weight: 700;
-            background-color: #fffbeb; /* Amarelo claro para destaque */
-        }
-        .total-final td {
-             font-weight: 800;
-             background-color: #10b981; /* Verde esmeralda para o total */
-             color: white;
-             font-size: 1.25rem;
-        }
-        /* Estilo para a célula de combinação */
-        .combination-cell {
-            padding: 0.25rem 0.5rem;
-        }
-        .score-check:checked {
-            border-color: #2563eb;
-        }
-        .bonus-check:checked {
-            border-color: #dc2626;
-        }
-        .bonus-label {
-            font-size: 0.75rem; /* Tamanho reduzido */
-            font-weight: 600;
-            color: #dc2626; /* Cor vermelha para o bônus */
-            min-width: 15px;
-        }
-        .zero-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #4b5563; /* Cinza escuro */
-            min-width: 15px;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .score-input { width: 100%; padding: 0.5rem; text-align: center; border: 1px solid #d1d5db; border-radius: 0.375rem; font-weight: 600; }
+        .score-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5); }
+        .score-input:disabled { background-color: #e5e7eb; cursor: not-allowed; }
+        .category-header { background-color: #e5e7eb; font-weight: 600; padding: 0.75rem; min-width: 100px; }
+        .separator-row td { border-top: 4px solid #4b5563; }
+        .total-final td { font-weight: 800; background-color: #10b981; color: white; font-size: 1.25rem; }
+        .bonus-label { font-size: 0.75rem; font-weight: 600; color: #dc2626; }
     </style>
 </head>
 <body class="p-4 sm:p-8">
 
-    <!-- SETUP MODAL - Para inserir os nomes -->
     <div id="setup-modal" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50">
         <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
             <h2 class="text-2xl font-bold mb-4 text-gray-800">Configurar Jogadores</h2>
-            <p class="text-sm text-gray-600 mb-4" id="player-count-info">Mínimo 2, máximo 6 jogadores.</p>
-            
-            <div id="player-inputs-container" class="space-y-4 mb-4">
-                <!-- Inputs de nome serão injetados aqui via JS -->
-            </div>
-            
+            <div id="player-inputs-container" class="space-y-4 mb-4"></div>
             <div class="flex space-x-2 mb-6">
-                <button id="add-player-btn" class="flex-1 bg-gray-300 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-400 transition shadow-sm disabled:opacity-50">
-                    + Adicionar Jogador
-                </button>
-                <button id="remove-player-btn" class="flex-1 bg-red-400 text-white py-2 rounded-lg font-semibold hover:bg-red-500 transition shadow-sm disabled:opacity-50">
-                    - Remover Último
-                </button>
+                <button id="add-player-btn" class="flex-1 bg-gray-300 py-2 rounded-lg font-semibold hover:bg-gray-400">+ Jogador</button>
+                <button id="remove-player-btn" class="flex-1 bg-red-400 text-white py-2 rounded-lg font-semibold hover:bg-red-500">- Remover</button>
             </div>
-
-            <button id="start-game-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition shadow-md">
-                Iniciar Jogo
-            </button>
-        </div>
-    </div>
-    
-    <!-- LOADING OVERLAY -->
-    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 pointer-events-none opacity-0">
-        <div class="text-white text-lg flex flex-col items-center">
-            <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Carregando Placar...
+            <button id="start-game-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 shadow-md">Iniciar Jogo</button>
         </div>
     </div>
 
     <header class="text-center mb-8">
-        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">GENERAL ONLINE</h1>
-        <!-- Linha de descrição removida -->
+        <h1 class="text-4xl font-extrabold text-gray-900">GENERAL ONLINE</h1>
+        <button onclick="resetGame()" class="mt-2 text-sm text-red-600 underline">Reiniciar Tudo</button>
     </header>
 
-    <!-- MAIN GAME CONTENT (Inicialmente escondido) -->
     <div id="app-content" class="max-w-4xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-2xl hidden">
-        <!-- Linha de STATUS removida -->
-
         <div class="overflow-x-auto">
-            <table id="score-table" class="min-w-full divide-y divide-gray-200 border-collapse">
-                <!-- Cabeçalhos e corpo da tabela serão gerados via JS -->
-            </table>
+            <table id="score-table" class="min-w-full divide-y divide-gray-200 border-collapse"></table>
         </div>
-        
     </div>
 
-    <!-- Box de Instruções Removido -->
-
-
-    <!-- Firebase imports -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        // Define o nível de log para debug
-        setLogLevel('Debug');
-
-        // Variáveis globais do ambiente (PREENCHIDAS AUTOMATICAMENTE)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // Configurações do Jogo
-        const GENERIC_PLAYER_KEYS = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6']; // Máximo de 6 jogadores
-        const MIN_PLAYERS = 2;
-        const MAX_PLAYERS = 6; 
-        
+    <script>
+        // Configurações e Variáveis
         const CATEGORIES_SIMPLES = ['um', 'dois', 'tres', 'quatro', 'cinco', 'seis'];
         const CATEGORIES_COMBINACAO = ['sequencia', 'fullhouse', 'quadra', 'general'];
-        const ALL_CATEGORIES = [...CATEGORIES_SIMPLES, ...CATEGORIES_COMBINACAO];
+        const CATEGORY_LABELS = { um:'1s', dois:'2s', tres:'3s', quatro:'4s', cinco:'5s', seis:'6s', sequencia:'Sequência', fullhouse:'Fula', quadra:'Poker', general:'General' };
+        const FIXED_SCORES = { sequencia: 25, fullhouse: 35, quadra: 40, general: 50 };
         
-        // Mapeamento de categoria para o valor numérico (para validação)
-        const CATEGORY_NUMBER_MAP = {
-            um: 1, dois: 2, tres: 3, quatro: 4, cinco: 5, seis: 6
+        let gameState = JSON.parse(localStorage.getItem('general_game')) || {
+            activePlayerKeys: ['p1', 'p2'],
+            playerNames: { p1: '', p2: '' },
+            scores: {},
+            gameStarted: false
         };
 
-        // Valores fixos e bônus
-        const FIXED_SCORES = {
-            sequencia: 25,
-            fullhouse: 35, // Fula
-            quadra: 40,    // Poker
-            general: 50
-        };
-        const BONUS_POINTS = 5;
+        const container = document.getElementById('player-inputs-container');
 
-        const CATEGORY_LABELS = {
-            um: '1s', dois: '2s', tres: '3s', quatro: '4s', cinco: '5s', seis: '6s',
-            sequencia: 'Sequência', fullhouse: 'Fula', quadra: 'Poker', general: 'General'
-        };
-        const COLOR_CLASSES = {
-            p1: 'text-blue-800', p2: 'text-green-800', p3: 'text-pink-800', 
-            p4: 'text-purple-800', p5: 'text-red-800', p6: 'text-yellow-800'
-        };
-
-
-        // Elementos DOM
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const setupModal = document.getElementById('setup-modal');
-        const appContent = document.getElementById('app-content');
-        const scoreTable = document.getElementById('score-table');
-        const startGameBtn = document.getElementById('start-game-btn');
-        const addPlayerBtn = document.getElementById('add-player-btn');
-        const removePlayerBtn = document.getElementById('remove-player-btn');
-        const playerInputsContainer = document.getElementById('player-inputs-container');
-        // const gameStateIndicator = document.getElementById('game-state-indicator'); // REMOVIDO
-        
-        let db, auth, userId;
-        let unsubscribeSnapshot = null;
-        let activePlayerKeys = [];
-        let playerNames = {};
-
-        // --- Funções de UI e Setup ---
-
-        function renderSetupModalInputs() {
-            playerInputsContainer.innerHTML = '';
-            
-            const currentNames = activePlayerKeys.map(key => playerNames[key] || '');
-            const currentCount = activePlayerKeys.length;
-
-            activePlayerKeys.forEach((key, index) => {
-                const color = COLOR_CLASSES[key].replace('text-', '').replace('-800', '');
-                
-                const div = document.createElement('div');
-                div.innerHTML = `
-                    <label for="name-${key}" class="block text-sm font-medium text-${color}-700">Jogador ${index + 1} (${key.toUpperCase()})</label>
-                    <input type="text" id="name-${key}" value="${currentNames[index]}" placeholder="Nome do Jogador ${index + 1}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                `;
-                playerInputsContainer.appendChild(div);
+        function renderSetup() {
+            container.innerHTML = '';
+            gameState.activePlayerKeys.forEach(key => {
+                container.innerHTML += `
+                    <div>
+                        <label class="block text-sm font-medium">Nome do Jogador ${key.slice(1)}</label>
+                        <input type="text" id="name-${key}" value="${gameState.playerNames[key] || ''}" class="mt-1 block w-full border p-2 rounded-md">
+                    </div>`;
             });
-            
-            addPlayerBtn.disabled = currentCount >= MAX_PLAYERS;
-            removePlayerBtn.disabled = currentCount <= MIN_PLAYERS;
-            startGameBtn.disabled = currentCount < MIN_PLAYERS;
         }
 
-        function addPlayer() {
-            const nextIndex = activePlayerKeys.length;
-            if (nextIndex < MAX_PLAYERS) {
-                const newKey = GENERIC_PLAYER_KEYS[nextIndex];
-                activePlayerKeys.push(newKey);
-                playerNames[newKey] = '';
-                renderSetupModalInputs();
+        document.getElementById('add-player-btn').onclick = () => {
+            if (gameState.activePlayerKeys.length < 6) {
+                const newKey = `p${gameState.activePlayerKeys.length + 1}`;
+                gameState.activePlayerKeys.push(newKey);
+                renderSetup();
             }
-        }
+        };
 
-        function removePlayer() {
-            if (activePlayerKeys.length > MIN_PLAYERS) {
-                const removedKey = activePlayerKeys.pop();
-                delete playerNames[removedKey];
-                renderSetupModalInputs();
+        document.getElementById('remove-player-btn').onclick = () => {
+            if (gameState.activePlayerKeys.length > 2) {
+                gameState.activePlayerKeys.pop();
+                renderSetup();
             }
-        }
+        };
 
-        function toggleSetupModal(show) {
-            if (show) {
-                setupModal.classList.remove('hidden');
-                appContent.classList.add('hidden');
+        document.getElementById('start-game-btn').onclick = () => {
+            gameState.activePlayerKeys.forEach(key => {
+                gameState.playerNames[key] = document.getElementById(`name-${key}`).value || key.toUpperCase();
+            });
+            gameState.gameStarted = true;
+            saveAndRender();
+        };
+
+        function saveAndRender() {
+            localStorage.setItem('general_game', JSON.stringify(gameState));
+            if (gameState.gameStarted) {
+                document.getElementById('setup-modal').classList.add('hidden');
+                document.getElementById('app-content').classList.remove('hidden');
+                renderTable();
             } else {
-                setupModal.classList.add('hidden');
-                appContent.classList.remove('hidden');
+                renderSetup();
             }
         }
 
-        // --- Validação de Pontuação Simples ---
-
-        /**
-         * Valida a pontuação para categorias simples (1s-6s).
-         */
-        function validateSimpleScore(category, score) {
-            // 0 ou vazio/NaN é válido (cancelamento / não pontuado)
-            if (score === 0 || isNaN(score)) {
-                return true; 
-            }
-
-            const categoryNumber = CATEGORY_NUMBER_MAP[category];
-            const maxScore = categoryNumber * 5;
-
-            // 1. Deve ser um múltiplo do número da categoria
-            const isMultiple = score % categoryNumber === 0;
-
-            // 2. Não deve exceder o máximo
-            const isUnderMax = score <= maxScore;
-            
-            // 3. Não deve ser negativo
-            const isPositive = score > 0;
-
-            return isMultiple && isUnderMax && isPositive;
-        }
-
-        // --- Funções de Geração de Tabela ---
-
-        function renderTableContent(allScores) {
-            const currentPlayers = activePlayerKeys; 
-            
-            const playersToSort = currentPlayers.map(key => ({
-                key: key,
-                name: playerNames[key] || key.toUpperCase() 
-            }));
-
-            playersToSort.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
-            const sortedPlayerKeys = playersToSort.map(p => p.key);
-
-            // 1. Gera o Cabeçalho (THEAD)
-            let headerHTML = `<thead><tr><th class="px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider category-header border-r">Categoria</th>`;
-            
-            sortedPlayerKeys.forEach(key => {
-                const name = playerNames[key] || key.toUpperCase();
-                const colorClass = COLOR_CLASSES[key];
-                headerHTML += `<th class="px-3 py-3 text-center text-xs font-bold ${colorClass} uppercase tracking-wider category-header">${name}</th>`;
+        function renderTable() {
+            const table = document.getElementById('score-table');
+            let html = `<thead><tr><th class="category-header border-r">Categoria</th>`;
+            gameState.activePlayerKeys.forEach(key => {
+                html += `<th class="category-header text-center">${gameState.playerNames[key]}</th>`;
             });
-            headerHTML += `</tr></thead>`;
+            html += `</tr></thead><tbody>`;
 
-            // 2. Gera o Corpo (TBODY)
-            let bodyHTML = '<tbody>';
+            // Linhas Simples
+            CATEGORIES_SIMPLES.forEach(cat => {
+                html += `<tr><td class="p-2 border-r font-medium">${CATEGORY_LABELS[cat]}</td>`;
+                gameState.activePlayerKeys.forEach(key => {
+                    const val = gameState.scores[key]?.[cat] ?? '';
+                    html += `<td class="p-1"><input type="number" onchange="updateScore('${key}','${cat}',this.value)" value="${val}" class="score-input"></td>`;
+                });
+                html += `</tr>`;
+            });
 
-            const generateTotalCells = (idSuffix, classNames = '') => sortedPlayerKeys.map(key => 
-                `<td class="px-3 py-2 text-center ${classNames}" id="${key}-${idSuffix}">0</td>`
-            ).join('');
-
-            // Funções auxiliares reescritas para usar sortedPlayerKeys (COM CHECKBOX DE CANCELAR PARA 1S-6S)
-            const generateInputCells = (category) => sortedPlayerKeys.map(key => {
-                // Se o valor for 0 (do Firestore), consideramos cancelado.
-                const scoreValue = allScores[key]?.[category];
-                // Se o valor não for nulo e for 0, é cancelado (intencional)
-                const isCancelled = scoreValue === 0; 
-                // Exibe valor apenas se não for nulo/indefinido (para não mostrar 0)
-                const displayValue = scoreValue === null || scoreValue === undefined ? '' : scoreValue;
-
-                return `<td class="score-cell">
-                    <div class="flex items-center w-full justify-between space-x-1 p-1">
-                        <!-- Checkbox de Cancelamento (0) -->
-                        <div class="flex items-center justify-start space-x-0.5 w-[30%] min-w-[40px]">
-                            <input type="checkbox" 
-                                   data-player="${key}" 
-                                   data-category="${category}" 
-                                   data-type="cancel-check" 
-                                   ${isCancelled ? 'checked' : ''}
-                                   class="w-4 h-4 text-gray-500 bg-gray-100 border-gray-300 rounded focus:ring-gray-400 cursor-pointer">
-                            <span class="zero-label">0</span>
+            // Linhas Combinação
+            CATEGORIES_COMBINACAO.forEach((cat, idx) => {
+                html += `<tr class="${idx === 0 ? 'separator-row' : ''}"><td class="p-2 border-r font-medium">${CATEGORY_LABELS[cat]}</td>`;
+                gameState.activePlayerKeys.forEach(key => {
+                    const data = gameState.scores[key]?.[cat] || { scored: false, bonus: false };
+                    const points = data.scored ? (FIXED_SCORES[cat] + (data.bonus ? 5 : 0)) : 0;
+                    html += `<td class="p-1">
+                        <div class="flex items-center justify-around">
+                            <span class="font-bold w-8">${points}</span>
+                            <input type="checkbox" ${data.scored ? 'checked' : ''} onchange="updateCombo('${key}','${cat}','scored',this.checked)" class="w-5 h-5">
+                            <input type="checkbox" ${data.bonus ? 'checked' : ''} ${!data.scored ? 'disabled' : ''} onchange="updateCombo('${key}','${cat}','bonus',this.checked)" class="w-4 h-4">
+                            <span class="bonus-label">+5</span>
                         </div>
-                        
-                        <!-- Input Field -->
-                        <input type="number" 
-                               data-player="${key}" 
-                               data-category="${category}" 
-                               data-type="simple-score"
-                               class="score-input flex-grow max-w-[60%] px-2 text-center" 
-                               value="${displayValue}" min="0" max="${CATEGORY_NUMBER_MAP[category] * 5}"
-                               ${isCancelled ? 'disabled' : ''}>
-                    </div>
-                    <div id="${key}-${category}-error" class="text-red-500 text-xs h-3 px-1 text-center"></div>
-                </td>`;
-            }).join('');
-            
-            // --- Seção Superior (1s a 6s) ---
-            CATEGORIES_SIMPLES.forEach(cat => {
-                bodyHTML += `<tr><td>${CATEGORY_LABELS[cat]}</td>${generateInputCells(cat)}</tr>`;
-            });
-
-            // --- Seção Inferior (Combinações) ---
-            CATEGORIES_COMBINACAO.forEach((cat, index) => {
-                const rowClass = index === 0 ? 'separator-row' : ''; 
-                
-                const inputCells = sortedPlayerKeys.map(key => { 
-                    const currentStatus = allScores[key]?.[cat] || {};
-                    
-                    // Estado do Firestore para Combinações
-                    const isCancelled = currentStatus.cancelled === true;
-                    const isScored = currentStatus.scored === true;
-                    
-                    // Se o status for NULL, os checkboxes devem estar desmarcados/não definidos
-                    const isNullState = currentStatus === null || currentStatus === undefined;
-                    
-                    // Propriedades dos Checkboxes
-                    const checkedZero = !isNullState && isCancelled ? 'checked' : '';
-                    const checkedStatus = !isNullState && isScored ? 'checked' : '';
-                    const checkedBonus = !isNullState && currentStatus.bonus === true ? 'checked' : '';
-                    
-                    // Desabilita Score/Bonus se Cancelado, Desabilita Bonus se Não Pontuou
-                    const scoreDisabled = isCancelled ? 'disabled' : '';
-                    const bonusDisabled = !isScored || isCancelled ? 'disabled' : '';
-                    
-                    const calculatedPoints = (!isCancelled && isScored)
-                                             ? (FIXED_SCORES[cat] + (currentStatus.bonus === true ? BONUS_POINTS : 0)) 
-                                             : 0;
-
-                    return `<td class="combination-cell">
-                                <div class="flex items-center justify-between h-full space-x-0.5">
-                                    
-                                    <!-- Checkbox de Cancelamento (0) -->
-                                    <div class="flex items-center space-x-0.5">
-                                        <input type="checkbox" 
-                                               data-player="${key}" 
-                                               data-category="${cat}" 
-                                               data-type="zero-check-combo" 
-                                               ${checkedZero} 
-                                               class="w-4 h-4 text-gray-500 bg-gray-100 border-gray-300 rounded focus:ring-gray-400 cursor-pointer">
-                                        <span class="zero-label">0</span>
-                                    </div>
-
-                                    <!-- Pontuação Exibida (Valor) -->
-                                    <span id="${key}-${cat}-points" class="font-bold text-sm min-w-[35px] text-center">${calculatedPoints}</span>
-                                    
-                                    <!-- Checkbox Principal (Sim/Não) -->
-                                    <input type="checkbox" 
-                                           data-player="${key}" 
-                                           data-category="${cat}" 
-                                           data-type="score-check" 
-                                           ${checkedStatus} 
-                                           ${scoreDisabled}
-                                           class="score-check w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
-                                    
-                                    <!-- Checkbox Bônus (+5) -->
-                                    <input type="checkbox" 
-                                           data-player="${key}" 
-                                           data-category="${cat}" 
-                                           data-type="bonus-check" 
-                                           ${checkedBonus} 
-                                           ${bonusDisabled}
-                                           class="bonus-check w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 cursor-pointer">
-                                           
-                                    <!-- Bônus Label (+5) -->
-                                    <span data-player="${key}" 
-                                          data-category="${cat}"
-                                          class="bonus-label min-w-[15px] text-center ${bonusDisabled ? 'opacity-50' : ''}">+5</span>
-                                </div>
-                            </td>`;
-                }).join('');
-
-                bodyHTML += `<tr class="${rowClass}"><td>${CATEGORY_LABELS[cat]}</td>${inputCells}</tr>`;
-            });
-
-            // Linha de TOTAL FINAL
-            bodyHTML += `<tr class="total-final"><td class="px-3 py-2 text-left text-sm border-r">TOTAL FINAL</td>${generateTotalCells('total')}</tr>`;
-
-            bodyHTML += '</tbody>';
-            
-            scoreTable.innerHTML = headerHTML + bodyHTML;
-
-            setupInputListeners();
-            calculateAndRenderTotals(allScores, sortedPlayerKeys); 
-        }
-        
-        function setupInputListeners() {
-            // --- Inputs Simples (1s - 6s) ---
-            
-            // Listener de digitação (Validação e Zero/Cancel)
-            document.querySelectorAll('input[data-type="simple-score"]').forEach(input => {
-                input.oninput = (e) => {
-                    const player = e.target.getAttribute('data-player');
-                    const category = e.target.getAttribute('data-category');
-                    const scoreText = e.target.value.trim();
-                    const score = parseInt(scoreText, 10);
-                    const errorElement = document.getElementById(`${player}-${category}-error`);
-                    const cancelCheck = document.querySelector(`input[data-player="${player}"][data-category="${category}"][data-type="cancel-check"]`);
-
-                    if (scoreText === '' || isNaN(score)) {
-                        // Se o campo está vazio, o valor salvo é null (Não Jogou)
-                        if (cancelCheck && cancelCheck.checked) {
-                            cancelCheck.checked = false; // Desmarca 0 se começar a digitar
-                        }
-                        e.target.value = ''; 
-                        errorElement.textContent = '';
-                        e.target.disabled = false; 
-                        
-                        savePlayerScore(player, category, null); // Salva NULL (Não jogado)
-                        return;
-                    }
-                    
-                    if (score === 0) {
-                         // Se 0 digitado, tratamos como cancelado (valor salvo é 0)
-                        if (cancelCheck && !cancelCheck.checked) {
-                            cancelCheck.checked = true;
-                        }
-                        e.target.value = ''; 
-                        errorElement.textContent = '';
-                        e.target.disabled = true; 
-                        savePlayerScore(player, category, 0); 
-                        return;
-                    }
-                    
-                    // Se o usuário digita um número positivo, desmarca o cancelamento
-                    if (cancelCheck && cancelCheck.checked) {
-                        cancelCheck.checked = false;
-                    }
-                    e.target.disabled = false;
-
-                    if (validateSimpleScore(category, score)) {
-                        errorElement.textContent = '';
-                        savePlayerScore(player, category, score);
-                    } else {
-                        const max = CATEGORY_NUMBER_MAP[category] * 5;
-                        errorElement.textContent = `Inválido. Múltiplo de ${CATEGORY_NUMBER_MAP[category]}, máx ${max}.`;
-                    }
-                };
-            });
-            
-            // Checkboxes de Cancelamento (Simples)
-            document.querySelectorAll('input[data-type="cancel-check"]').forEach(checkbox => {
-                checkbox.onchange = (e) => {
-                    const player = e.target.getAttribute('data-player');
-                    const category = e.target.getAttribute('data-category');
-                    const input = document.querySelector(`input[data-player="${player}"][data-category="${category}"][data-type="simple-score"]`);
-                    const errorElement = document.getElementById(`${player}-${category}-error`);
-
-                    if (checkbox.checked) {
-                        // Marcar como cancelado (valor salvo é 0)
-                        input.value = ''; 
-                        errorElement.textContent = ''; 
-                        input.disabled = true; 
-                        savePlayerScore(player, category, 0); 
-                    } else {
-                        // Desmarcar cancelamento, habilitando o input
-                        input.disabled = false;
-                        // Ao desmarcar, o estado volta para "Não Jogado" (null)
-                        savePlayerScore(player, category, null);
-                    }
-                };
-            });
-
-            // --- Checkboxes Combinadas (Sequência, Fula, Poker, General) ---
-            
-            // Listener para Score e Bonus Checks
-            document.querySelectorAll('input[data-type="score-check"], input[data-type="bonus-check"]').forEach(checkbox => {
-                checkbox.onchange = (e) => {
-                    const playerKey = e.target.getAttribute('data-player');
-                    const category = e.target.getAttribute('data-category');
-                    
-                    const scoreCheck = document.querySelector(`input[data-player="${playerKey}"][data-category="${category}"][data-type="score-check"]`);
-                    const bonusCheck = document.querySelector(`input[data-player="${playerKey}"][data-category="${category}"][data-type="bonus-check"]`);
-                    const zeroCheckCombo = document.querySelector(`input[data-player="${playerKey}"][data-category="${category}"][data-type="zero-check-combo"]`);
-                    
-                    let isScored = scoreCheck.checked;
-                    let hasBonus = bonusCheck.checked;
-
-                    // 1. Garante que se Marcar Pontuação, Cancela o Zero
-                    if (isScored && zeroCheckCombo.checked) {
-                        zeroCheckCombo.checked = false;
-                    }
-
-                    // 2. Lógica para desabilitar/resetar bônus se a pontuação principal for desmarcada
-                    if (!isScored) {
-                        bonusCheck.checked = false; 
-                        hasBonus = false;
-                    } 
-                    
-                    // Atualiza o estado de desabilitação e opacidade
-                    updateComboCheckStates(playerKey, category, isScored, zeroCheckCombo.checked);
-
-                    const newValue = { scored: isScored, bonus: hasBonus, cancelled: zeroCheckCombo.checked };
-                    savePlayerScore(playerKey, category, newValue);
-                };
-            });
-
-            // Listener para Zero Check Combo
-            document.querySelectorAll('input[data-type="zero-check-combo"]').forEach(checkbox => {
-                checkbox.onchange = (e) => {
-                    const playerKey = e.target.getAttribute('data-player');
-                    const category = e.target.getAttribute('data-category');
-                    
-                    const zeroChecked = checkbox.checked;
-                    
-                    const scoreCheck = document.querySelector(`input[data-player="${playerKey}"][data-category="${category}"][data-type="score-check"]`);
-                    const bonusCheck = document.querySelector(`input[data-player="${playerKey}"][data-category="${category}"][data-type="bonus-check"]`);
-
-                    if (zeroChecked) {
-                        // Se zerar, desmarca tudo
-                        scoreCheck.checked = false;
-                        bonusCheck.checked = false;
-                    }
-                    
-                    // Atualiza o estado de desabilitação e opacidade
-                    updateComboCheckStates(playerKey, category, scoreCheck.checked, zeroChecked);
-
-                    const newValue = { scored: scoreCheck.checked, bonus: bonusCheck.checked, cancelled: zeroChecked };
-                    savePlayerScore(playerKey, category, newValue);
-                };
-            });
-        }
-        
-        /**
-         * Atualiza o estado visual (disabled/opacity) das combinações.
-         */
-        function updateComboCheckStates(playerKey, category, isScored, isCancelled) {
-            const scoreCheck = document.querySelector(`input[data-player="${playerKey}"][data-category="${category}"][data-type="score-check"]`);
-            const bonusCheck = document.querySelector(`input[data-player="${playerKey}"][data-category="${category}"][data-type="bonus-check"]`);
-            const bonusLabel = bonusCheck ? bonusCheck.parentElement.querySelector('.bonus-label') : null;
-
-            const shouldBeDisabled = isCancelled;
-            const bonusShouldBeDisabled = isCancelled || !isScored;
-
-            if (scoreCheck) scoreCheck.disabled = shouldBeDisabled;
-            if (bonusCheck) bonusCheck.disabled = bonusShouldBeDisabled;
-
-            if (bonusLabel) {
-                if (bonusShouldBeDisabled) {
-                    bonusLabel.classList.add('opacity-50');
-                } else {
-                    bonusLabel.classList.remove('opacity-50');
-                }
-            }
-        }
-
-
-        // --- Funções de Cálculo e Salvamento ---
-
-        /**
-         * Retorna o estado atualizado do jogador a partir do DOM, aplicando a última mudança.
-         */
-        function getPlayerStateFromDOM(playerKey, categoryToUpdate, newValue) {
-            const playerScores = {};
-
-            ALL_CATEGORIES.forEach(cat => {
-                const isCombination = CATEGORIES_COMBINACAO.includes(cat);
-                
-                if (isCombination) {
-                    const zeroCheck = document.querySelector(`input[data-player="${playerKey}"][data-category="${cat}"][data-type="zero-check-combo"]`);
-                    const scoreCheck = document.querySelector(`input[data-player="${playerKey}"][data-category="${cat}"][data-type="score-check"]`);
-                    const bonusCheck = document.querySelector(`input[data-player="${playerKey}"][data-category="${cat}"][data-type="bonus-check"]`);
-                    
-                    let isCancelled = zeroCheck?.checked || false;
-                    let isScored = scoreCheck?.checked || false;
-                    let hasBonus = bonusCheck?.checked || false;
-                    
-                    // Aplica a nova mudança se esta for a categoria sendo alterada
-                    if (cat === categoryToUpdate && typeof newValue === 'object') {
-                        isCancelled = newValue.cancelled;
-                        isScored = newValue.scored;
-                        hasBonus = newValue.bonus;
-                    }
-                    
-                    // A categoria de combinação é sempre salva como um objeto
-                    playerScores[cat] = { scored: isScored, bonus: hasBonus, cancelled: isCancelled };
-                    
-                } else {
-                    // Categoria Simples
-                    const input = document.querySelector(`input[data-player="${playerKey}"][data-category="${cat}"][data-type="simple-score"]`);
-                    const cancelCheck = document.querySelector(`input[data-player="${playerKey}"][data-category="${cat}"][data-type="cancel-check"]`);
-                    
-                    const rawValue = input?.value?.trim() || '';
-                    let score;
-                    
-                    // Lógica para determinar o score final:
-                    if (cat === categoryToUpdate && typeof newValue === 'number') {
-                        score = newValue; // Pontuação numérica (0 ou >0)
-                    } else if (cat === categoryToUpdate && newValue === null) {
-                        score = null; // Não jogado
-                    } 
-                    else {
-                        // Se estamos apenas lendo o estado DOM para salvar outras mudanças:
-                        if (cancelCheck?.checked || input?.disabled) {
-                            score = 0; // Cancelado/Zerado
-                        } else if (rawValue === '') {
-                             score = null; // Não Preenchido
-                        } else {
-                             score = parseInt(rawValue, 10);
-                             if (isNaN(score)) score = 0; 
-                        }
-                    }
-
-                    // A categoria simples é sempre salva como um número ou null (Não Jogado)
-                    playerScores[cat] = score;
-                }
-            });
-            
-            return playerScores;
-        }
-
-        /**
-         * Calcula o total final para um jogador.
-         */
-        function calculatePlayerTotals(scores) {
-            let subtotal = 0;
-            
-            // 1. Soma Simples (1s a 6s)
-            CATEGORIES_SIMPLES.forEach(cat => {
-                // Pontuação simples só soma se for um número (ignora null)
-                const score = scores[cat];
-                if (typeof score === 'number') {
-                    subtotal += score;
-                }
-            });
-
-            // 2. Soma Combinação
-            let combinacaoTotal = 0;
-            CATEGORIES_COMBINACAO.forEach(cat => {
-                const catScore = scores[cat] || {};
-                
-                // Se não foi cancelado E pontuou
-                if (!catScore.cancelled && catScore.scored) {
-                    let score = FIXED_SCORES[cat];
-                    if (catScore.bonus) {
-                        score += BONUS_POINTS;
-                    }
-                    combinacaoTotal += score;
-                }
-            });
-
-            // 3. Total Final
-            const total = subtotal + combinacaoTotal;
-
-            return { total }; 
-        }
-
-        /**
-         * Calcula e renderiza todos os totais na tabela.
-         */
-        function calculateAndRenderTotals(allScores, keysToRender = activePlayerKeys) {
-            keysToRender.forEach(key => {
-                const playerScores = allScores[key] || {};
-                const { total } = calculatePlayerTotals(playerScores);
-
-                const totalEl = document.getElementById(`${key}-total`);
-                if (totalEl) totalEl.textContent = total;
-                
-                // Atualiza a exibição de pontos e estados dos checkboxes
-                CATEGORIES_COMBINACAO.forEach(cat => {
-                    const catScore = allScores[key]?.[cat] || {};
-                    const pointsSpan = document.getElementById(`${key}-${cat}-points`);
-                    
-                    const isCancelled = catScore.cancelled === true;
-                    const isScored = catScore.scored === true;
-
-                    // Atualiza a exibição de pontos
-                    if(pointsSpan) {
-                         const calculatedValue = (!isCancelled && isScored)
-                                                 ? (FIXED_SCORES[cat] + (catScore.bonus ? BONUS_POINTS : 0)) 
-                                                 : 0;
-                         pointsSpan.textContent = calculatedValue;
-                    }
-
-                    // Atualiza o estado dos checkboxes e labels com base no estado do Firestore
-                    const zeroCheckCombo = document.querySelector(`input[data-player="${key}"][data-category="${cat}"][data-type="zero-check-combo"]`);
-                    const scoreCheck = document.querySelector(`input[data-player="${key}"][data-category="${cat}"][data-type="score-check"]`);
-                    const bonusCheck = document.querySelector(`input[data-player="${key}"][data-category="${cat}"][data-type="bonus-check"]`);
-                    
-                    if (zeroCheckCombo) zeroCheckCombo.checked = isCancelled;
-                    if (scoreCheck) scoreCheck.checked = isScored;
-                    if (bonusCheck) bonusCheck.checked = catScore.bonus === true;
-                    
-                    updateComboCheckStates(key, cat, isScored, isCancelled);
+                    </td>`;
                 });
-            });
-        }
-        
-        let saveTimeout = {};
-
-        /**
-         * Função unificada para salvar pontuações simples ou de combinação no Firestore.
-         */
-        function savePlayerScore(playerKey, categoryToUpdate, newValue) {
-            if (!db || !userId) {
-                console.warn("Firestore não está pronto para salvar.");
-                return;
-            }
-
-            clearTimeout(saveTimeout[playerKey]);
-            
-            saveTimeout[playerKey] = setTimeout(async () => {
-                try {
-                    const docRef = doc(db, "artifacts", appId, "public", "data", "general_scores", "current_game");
-                    
-                    const finalPlayerScores = getPlayerStateFromDOM(playerKey, categoryToUpdate, newValue);
-                    
-                    const docUpdate = {
-                        [playerKey]: finalPlayerScores
-                    };
-                    
-                    await setDoc(docRef, docUpdate, { merge: true });
-                    console.log(`Pontuação de ${playerKey} salva com sucesso.`);
-
-                } catch (error) {
-                    console.error("Erro ao salvar a pontuação:", error);
-                }
-            }, 500);
-        }
-        
-        /**
-         * Lógica para determinar o vencedor no final da partida.
-         * (Mantida, mas sem o pop-up)
-         */
-        function determineWinner(allScores, sortedPlayerKeys) {
-            let highestScore = -1;
-            let winnerKey = null;
-            
-            const playerTotals = {};
-
-            sortedPlayerKeys.forEach(playerKey => {
-                const playerScores = allScores[playerKey] || {};
-                const { total } = calculatePlayerTotals(playerScores);
-                playerTotals[playerKey] = total;
-
-                // 2. Determina a maior pontuação
-                if (total > highestScore) {
-                    highestScore = total;
-                    winnerKey = playerKey;
-                }
-            });
-            
-            const winningPlayers = sortedPlayerKeys.filter(key => playerTotals[key] === highestScore);
-                
-            let winnerMessage;
-            let winnerScore = highestScore;
-
-            if (winningPlayers.length > 1) {
-                const names = winningPlayers.map(key => playerNames[key] || key.toUpperCase());
-                
-                let namesString;
-                if (names.length === 2) {
-                    namesString = `${names[0]} e ${names[1]}`;
-                } else {
-                    const last = names.pop();
-                    namesString = `${names.join(', ')} e ${last}`;
-                }
-                winnerMessage = `EMPATE! ${namesString}`;
-            } else if (winnerKey) {
-                winnerMessage = playerNames[winnerKey] || winnerKey.toUpperCase();
-            } else {
-                winnerMessage = "Nenhum vencedor. Todos zeraram!";
-            }
-
-            return { winnerMessage, winnerScore };
-        }
-
-        /**
-         * Verifica se o jogo terminou (apenas a categoria General foi preenchida para todos)
-         * (Lógica mantida para fins de debug, mas não aciona pop-up)
-         */
-        function checkGameEndAndShowWinner(allScores, sortedPlayerKeys) {
-            if (sortedPlayerKeys.length < MIN_PLAYERS || !allScores) {
-                // gameStateIndicator.textContent = "STATUS: Configuração de jogadores incompleta.";
-                return;
-            }
-
-            let isGameFinished = true;
-            const CHECK_CATEGORY = 'general';
-            
-            sortedPlayerKeys.forEach(playerKey => {
-                const generalScore = allScores[playerKey]?.[CHECK_CATEGORY];
-
-                // O jogo termina se o General NÃO for null (significa que foi preenchido ou zerado)
-                if (generalScore === null || generalScore === undefined) {
-                     isGameFinished = false;
-                }
-            });
-            
-            if (isGameFinished) {
-                // gameStateIndicator.textContent = "STATUS: Jogo Finalizado. General preenchido por todos!";
-            } else {
-                // gameStateIndicator.textContent = "STATUS: Jogo em andamento. General não preenchido por todos os jogadores.";
-            }
-        }
-
-        function renderScores(allScores) {
-            
-            if (allScores.playerNames) {
-                playerNames = allScores.playerNames;
-                activePlayerKeys = Object.keys(playerNames).filter(key => playerNames[key]);
-                
-                if (activePlayerKeys.length < MIN_PLAYERS) {
-                    activePlayerKeys = GENERIC_PLAYER_KEYS.slice(0, MIN_PLAYERS);
-                    toggleSetupModal(true);
-                    renderSetupModalInputs();
-                    return;
-                }
-
-                renderTableContent(allScores);
-                toggleSetupModal(false);
-
-            } else {
-                activePlayerKeys = GENERIC_PLAYER_KEYS.slice(0, MIN_PLAYERS);
-                toggleSetupModal(true);
-                renderSetupModalInputs();
-            }
-
-            loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
-        }
-        
-        // --- Funções do Firebase ---
-
-        async function savePlayerNamesAndStart() {
-            const namesToSave = {};
-            const keysToUse = [];
-
-            activePlayerKeys.forEach(key => {
-                const input = document.getElementById(`name-${key}`);
-                const name = input ? input.value.trim() : '';
-                if (name) {
-                    namesToSave[key] = name;
-                    keysToUse.push(key);
-                }
+                html += `</tr>`;
             });
 
-            if (keysToUse.length < MIN_PLAYERS) {
-                return;
-            }
-            
-            playerNames = namesToSave;
-            activePlayerKeys = keysToUse;
-
-            if (!db || !userId) {
-                return;
-            }
-            
-            const initialDocument = { playerNames: namesToSave };
-
-            keysToUse.forEach(key => {
-                const initialPlayerState = {};
-                
-                // Inicializa todas as 10 categorias com NULL (Não Jogado)
-                ALL_CATEGORIES.forEach(cat => {
-                    initialPlayerState[cat] = null;
-                });
-                
-                initialDocument[key] = initialPlayerState; 
+            // Total
+            html += `<tr class="total-final"><td class="p-2 border-r">TOTAL</td>`;
+            gameState.activePlayerKeys.forEach(key => {
+                html += `<td class="text-center" id="total-${key}">${calculateTotal(key)}</td>`;
             });
-
-            try {
-                const docRef = doc(db, "artifacts", appId, "public", "data", "general_scores", "current_game");
-                
-                await setDoc(docRef, initialDocument); 
-                console.log("Nomes dos jogadores e novo jogo inicializado com sucesso.");
-            } catch (error) {
-                console.error("Erro ao salvar os nomes:", error);
-            }
+            html += `</tr></tbody>`;
+            table.innerHTML = html;
         }
 
-        function setupFirestoreListener() {
-            if (!db || !userId) return;
+        window.updateScore = (player, cat, val) => {
+            if (!gameState.scores[player]) gameState.scores[player] = {};
+            gameState.scores[player][cat] = val === '' ? null : parseInt(val);
+            saveAndRender();
+        };
 
-            const docRef = doc(db, "artifacts", appId, "public", "data", "general_scores", "current_game");
+        window.updateCombo = (player, cat, type, val) => {
+            if (!gameState.scores[player]) gameState.scores[player] = {};
+            if (!gameState.scores[player][cat]) gameState.scores[player][cat] = { scored: false, bonus: false };
+            gameState.scores[player][cat][type] = val;
+            if (type === 'scored' && !val) gameState.scores[player][cat].bonus = false;
+            saveAndRender();
+        };
 
-            if (unsubscribeSnapshot) {
-                unsubscribeSnapshot();
-            }
-
-            unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
-                const allScores = docSnap.exists() ? docSnap.data() : {};
-                renderScores(allScores);
-                
-            }, (error) => {
-                console.error("Erro no listener do Firestore:", error);
-                loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
+        function calculateTotal(player) {
+            let total = 0;
+            const s = gameState.scores[player] || {};
+            CATEGORIES_SIMPLES.forEach(c => total += (parseInt(s[c]) || 0));
+            CATEGORIES_COMBINACAO.forEach(c => {
+                if (s[c]?.scored) total += (FIXED_SCORES[c] + (s[c].bonus ? 5 : 0));
             });
+            return total;
         }
-        
-        async function initializeAppAndAuth() {
-            loadingOverlay.classList.remove('opacity-0', 'pointer-events-none');
-            
-            if (Object.keys(firebaseConfig).length === 0) {
-                 // gameStateIndicator.textContent = "Erro: Configuração do Firebase não encontrada.";
-                 loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
-                 return;
-            }
 
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        // gameStateIndicator.textContent = "STATUS: Autenticado. Aguardando dados."; 
-                        
-                        startGameBtn.onclick = savePlayerNamesAndStart;
-                        addPlayerBtn.onclick = addPlayer;
-                        removePlayerBtn.onclick = removePlayer;
-                        
-                        setupFirestoreListener();
-
-                    } else {
-                        userId = null;
-                        // gameStateIndicator.textContent = "STATUS: Não autenticado."; 
-                        if (unsubscribeSnapshot) {
-                            unsubscribeSnapshot();
-                        }
-                        loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
-                    }
-                });
-
-            } catch (error) {
-                console.error("Erro de inicialização ou autenticação do Firebase:", error);
-                // gameStateIndicator.textContent = "Erro de inicialização do Firebase."; 
-                loadingOverlay.classList.add('opacity-0', 'pointer-events-none');
+        function resetGame() {
+            if(confirm("Deseja zerar o placar e voltar para o início?")) {
+                localStorage.removeItem('general_game');
+                location.reload();
             }
         }
 
-        initializeAppAndAuth();
+        saveAndRender();
     </script>
-
 </body>
 </html>
