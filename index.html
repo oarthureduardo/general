@@ -6,227 +6,586 @@
     <title>GENERAL ONLINE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .score-input { width: 100%; padding: 0.5rem; text-align: center; border: 1px solid #d1d5db; border-radius: 0.375rem; transition: all 0.2s; font-weight: 600; }
-        .score-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5); }
-        .score-input:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.6; }
-        .score-input.invalid { border-color: #ef4444; background-color: #fee2e2; }
-        .category-header { background-color: #e5e7eb; font-weight: 600; padding: 0.75rem; min-width: 110px; }
-        .separator-row td { border-top: 4px solid #4b5563; }
-        .total-final td { font-weight: 800; background-color: #10b981; color: white; font-size: 1.25rem; }
-        .bonus-label { font-size: 0.75rem; font-weight: 600; color: #dc2626; min-width: 20px; }
-        .zero-label { font-size: 0.75rem; font-weight: 600; color: #4b5563; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .score-button {
+            width: 100%;
+            padding: 0.75rem;
+            text-align: center;
+            border: 3px solid #3b82f6;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #1e40af;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 4rem;
+        }
+        
+        .score-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            border-color: #2563eb;
+        }
+        
+        .score-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            color: #6b7280;
+        }
+        
+        .score-button.zeroed {
+            background: #fee2e2;
+            border-color: #dc2626;
+            color: #991b1b;
+        }
+        
+        .zeroed-text {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+        
+        .number-option-btn {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 3px solid #3b82f6;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .number-option-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+            border-color: #2563eb;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        }
+        
+        .option-dice {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+        
+        .option-points {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #1e3a8a;
+        }
+        
+        .category-header { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700; 
+            padding: 1rem; 
+            text-align: center;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .category-label {
+            background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%);
+            font-weight: 600;
+            padding: 0.875rem;
+            border-right: 3px solid #d1d5db;
+            font-size: 1rem;
+        }
+        
+        .separator-row td { 
+            border-top: 4px solid #8b5cf6;
+            padding-top: 1rem !important;
+        }
+        
+        .separator-row:first-child td {
+            padding-top: 1.5rem !important;
+        }
+        
+        .total-final td { 
+            font-weight: 800; 
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white; 
+            font-size: 1.5rem;
+            padding: 1.25rem !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .combo-cell {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.5rem;
+        }
+        
+        .combo-points {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #1f2937;
+            min-width: 3rem;
+            text-align: center;
+            background: #f9fafb;
+            padding: 0.375rem 0.5rem;
+            border-radius: 0.375rem;
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .checkbox-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .bonus-checkbox-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        
+        .bonus-checkbox-wrapper.active {
+            opacity: 1;
+        }
+        
+        .bonus-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #dc2626;
+            background: #fee2e2;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        
+        input[type="checkbox"] {
+            width: 1.375rem;
+            height: 1.375rem;
+            cursor: pointer;
+            accent-color: #3b82f6;
+        }
+        
+        input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+        
+        .table-cell {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .game-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .modal-overlay {
+            backdrop-filter: blur(4px);
+        }
+        
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.5rem 1rem;
+            background: #f9fafb;
+            border-left: 4px solid #8b5cf6;
+        }
+        
+        .dice-icon {
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        
+        @media (max-width: 640px) {
+            .combo-cell {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .combo-points {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8">
 
-    <div id="setup-modal" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-4 text-gray-800">Configurar Jogadores</h2>
-            <p class="text-sm text-gray-600 mb-4">Mínimo 2, máximo 6 jogadores.</p>
-            <div id="player-inputs-container" class="space-y-4 mb-4"></div>
-            <div class="flex space-x-2 mb-6">
-                <button id="add-player-btn" class="flex-1 bg-gray-300 py-2 rounded-lg font-semibold hover:bg-gray-400">+ Adicionar</button>
-                <button id="remove-player-btn" class="flex-1 bg-red-400 text-white py-2 rounded-lg font-semibold hover:bg-red-500">- Remover</button>
+    <!-- Modal de Configuração -->
+    <div id="setup-modal" class="fixed inset-0 bg-gradient-to-br from-purple-900 to-indigo-900 bg-opacity-95 flex items-center justify-center z-50 modal-overlay">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-extrabold text-gray-900 mb-2">🎲 GENERAL ONLINE</h2>
+                <p class="text-sm text-gray-600">Configure os jogadores para começar</p>
             </div>
-            <button id="start-game-btn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 shadow-md">Iniciar Jogo</button>
+            
+            <div id="player-inputs-container" class="space-y-3 mb-6"></div>
+            
+            <div class="flex space-x-3 mb-6">
+                <button id="add-player-btn" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition shadow-md">
+                    + Adicionar
+                </button>
+                <button id="remove-player-btn" class="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition shadow-md">
+                    - Remover
+                </button>
+            </div>
+            
+            <button id="start-game-btn" class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg font-bold text-lg hover:from-green-600 hover:to-green-700 transition shadow-lg transform hover:scale-105">
+                🚀 Iniciar Jogo
+            </button>
         </div>
     </div>
 
-    <header class="text-center mb-8">
-        <h1 class="text-4xl font-extrabold text-gray-900 mb-2">GENERAL ONLINE</h1>
-        <div id="game-status" class="text-sm font-medium text-blue-600 uppercase tracking-wider">Aguardando Início</div>
-    </header>
-
-    <div id="app-content" class="max-w-4xl mx-auto bg-white p-4 sm:p-6 rounded-xl shadow-2xl hidden">
-        <div class="overflow-x-auto">
-            <table id="score-table" class="min-w-full divide-y divide-gray-200 border-collapse"></table>
+    <!-- Modal de Seleção de Números -->
+    <div id="number-modal" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50 hidden modal-overlay">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+            <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-6 text-center"></h3>
+            <div id="number-options-grid" class="grid grid-cols-3 gap-3 mb-6"></div>
+            <button onclick="closeNumberModal()" class="w-full bg-gray-500 text-white py-3 rounded-lg font-semibold hover:bg-gray-600 transition">
+                Cancelar
+            </button>
         </div>
-        <div class="mt-6 flex justify-center">
-            <button onclick="resetGame()" class="text-red-500 hover:text-red-700 text-sm font-semibold underline">Reiniciar Partida</button>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div id="app-content" class="hidden">
+        <header class="text-center mb-6">
+            <h1 class="text-5xl font-extrabold text-white drop-shadow-lg mb-2">🎲 GENERAL ONLINE</h1>
+            <p class="text-white text-opacity-90 text-sm">Placar Digital</p>
+            <button onclick="resetGame()" class="mt-3 text-sm text-white bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-semibold transition shadow-md">
+                🔄 Reiniciar Jogo
+            </button>
+        </header>
+
+        <div class="max-w-5xl mx-auto game-card p-6">
+            <div class="overflow-x-auto">
+                <table id="score-table" class="min-w-full border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="category-header rounded-tl-lg" style="min-width: 180px;">CATEGORIA</th>
+                            <th class="category-header" colspan="999" style="display: none;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+            
+            <div class="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200">
+                <h3 class="font-bold text-gray-800 mb-2 text-center">📋 Como Jogar</h3>
+                <div class="text-xs text-gray-700 space-y-1">
+                    <p><strong>Números (1-6):</strong> Soma dos dados com aquele número</p>
+                    <p><strong>Sequência:</strong> 1-2-3-4-5 ou 2-3-4-5-6 = 25 pts</p>
+                    <p><strong>Full House:</strong> 3 iguais + 2 iguais = 35 pts</p>
+                    <p><strong>Poker:</strong> 4 dados iguais = 40 pts</p>
+                    <p><strong>General:</strong> 5 dados iguais = 50 pts</p>
+                    <p class="text-red-600 font-semibold">✨ Bônus +5: Marque se fez em uma jogada só!</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- Regras e Configurações ---
-        const CAT_SIMPLES = ['um', 'dois', 'tres', 'quatro', 'cinco', 'seis'];
-        const CAT_VAL = { um:1, dois:2, tres:3, quatro:4, cinco:5, seis:6 };
-        const CAT_COMBO = ['sequencia', 'fullhouse', 'quadra', 'general'];
-        const CAT_LABELS = { um:'1s', dois:'2s', tres:'3s', quatro:'4s', cinco:'5s', seis:'6s', sequencia:'Sequência', fullhouse:'Fula', quadra:'Poker', general:'General' };
+        const CATEGORIES_SIMPLES = ['um', 'dois', 'tres', 'quatro', 'cinco', 'seis'];
+        const CATEGORIES_COMBINACAO = ['sequencia', 'fullhouse', 'quadra', 'general'];
+        const CATEGORY_LABELS = { 
+            um:'🎲 Uns (1)', 
+            dois:'🎲 Dois (2)', 
+            tres:'🎲 Três (3)', 
+            quatro:'🎲 Quatro (4)', 
+            cinco:'🎲 Cinco (5)', 
+            seis:'🎲 Seis (6)', 
+            sequencia:'🎯 Sequência', 
+            fullhouse:'🏠 Full House', 
+            quadra:'♠️ Poker', 
+            general:'👑 General' 
+        };
         const FIXED_SCORES = { sequencia: 25, fullhouse: 35, quadra: 40, general: 50 };
-
-        let gameState = JSON.parse(localStorage.getItem('general_v1_rules')) || {
-            activeKeys: ['p1', 'p2'],
-            names: { p1: '', p2: '' },
+        
+        let gameState = JSON.parse(localStorage.getItem('general_game')) || {
+            activePlayerKeys: ['p1', 'p2'],
+            playerNames: { p1: '', p2: '' },
             scores: {},
-            started: false
+            gameStarted: false
         };
 
-        // --- Gerenciamento de Jogadores ---
+        const container = document.getElementById('player-inputs-container');
+
         function renderSetup() {
-            const container = document.getElementById('player-inputs-container');
             container.innerHTML = '';
-            gameState.activeKeys.forEach(key => {
+            gameState.activePlayerKeys.forEach((key, idx) => {
                 container.innerHTML += `
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Jogador ${key.slice(1)}</label>
-                        <input type="text" id="input-${key}" value="${gameState.names[key] || ''}" placeholder="Nome do Jogador" class="mt-1 block w-full border p-2 rounded-md shadow-sm">
+                    <div class="bg-gray-50 p-3 rounded-lg border-2 border-gray-200">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
+                            👤 Jogador ${idx + 1}
+                        </label>
+                        <input type="text" id="name-${key}" value="${gameState.playerNames[key] || ''}" 
+                               placeholder="Digite o nome..." 
+                               class="block w-full border-2 border-gray-300 p-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition">
                     </div>`;
             });
         }
 
         document.getElementById('add-player-btn').onclick = () => {
-            if (gameState.activeKeys.length < 6) {
-                gameState.activeKeys.push(`p${gameState.activeKeys.length + 1}`);
+            if (gameState.activePlayerKeys.length < 6) {
+                const newKey = `p${gameState.activePlayerKeys.length + 1}`;
+                gameState.activePlayerKeys.push(newKey);
+                gameState.playerNames[newKey] = '';
                 renderSetup();
+            } else {
+                alert('Máximo de 6 jogadores!');
             }
         };
 
         document.getElementById('remove-player-btn').onclick = () => {
-            if (gameState.activeKeys.length > 2) {
-                gameState.activeKeys.pop();
+            if (gameState.activePlayerKeys.length > 2) {
+                const removedKey = gameState.activePlayerKeys.pop();
+                delete gameState.playerNames[removedKey];
+                delete gameState.scores[removedKey];
                 renderSetup();
+            } else {
+                alert('Mínimo de 2 jogadores!');
             }
         };
 
         document.getElementById('start-game-btn').onclick = () => {
-            gameState.activeKeys.forEach(key => {
-                gameState.names[key] = document.getElementById(`input-${key}`).value || `JOGADOR ${key.slice(1)}`;
+            let allNamesValid = true;
+            gameState.activePlayerKeys.forEach(key => {
+                const name = document.getElementById(`name-${key}`).value.trim();
+                if (!name) {
+                    allNamesValid = false;
+                } else {
+                    gameState.playerNames[key] = name;
+                }
             });
-            gameState.started = true;
+            
+            if (!allNamesValid) {
+                alert('⚠️ Por favor, preencha o nome de todos os jogadores!');
+                return;
+            }
+            
+            gameState.gameStarted = true;
             saveAndRender();
         };
 
-        // --- Lógica Principal ---
         function saveAndRender() {
-            localStorage.setItem('general_v1_rules', JSON.stringify(gameState));
-            if (gameState.started) {
+            localStorage.setItem('general_game', JSON.stringify(gameState));
+            if (gameState.gameStarted) {
                 document.getElementById('setup-modal').classList.add('hidden');
                 document.getElementById('app-content').classList.remove('hidden');
-                updateStatus();
                 renderTable();
             } else {
                 renderSetup();
             }
         }
 
-        function updateStatus() {
-            let finished = true;
-            gameState.activeKeys.forEach(p => {
-                if (gameState.scores[p]?.general === undefined || (typeof gameState.scores[p].general === 'object' && !gameState.scores[p].general.cancelled && !gameState.scores[p].general.scored)) {
-                    finished = false;
+        function renderTable() {
+            const thead = document.querySelector('#score-table thead tr');
+            let headerHtml = '<th class="category-header rounded-tl-lg" style="min-width: 180px;">CATEGORIA</th>';
+            gameState.activePlayerKeys.forEach(key => {
+                headerHtml += `<th class="category-header">${gameState.playerNames[key]}</th>`;
+            });
+            thead.innerHTML = headerHtml;
+            
+            const tbody = document.getElementById('table-body');
+            let html = '';
+
+            // Seção Números Simples
+            html += `<tr><td colspan="${gameState.activePlayerKeys.length + 1}" class="section-title">NÚMEROS SIMPLES</td></tr>`;
+            CATEGORIES_SIMPLES.forEach(cat => {
+                const numValue = CATEGORIES_SIMPLES.indexOf(cat) + 1;
+                html += `<tr><td class="category-label">${CATEGORY_LABELS[cat]}</td>`;
+                gameState.activePlayerKeys.forEach(key => {
+                    const data = gameState.scores[key]?.[cat] || { value: null, zeroed: false };
+                    const isZeroed = data.zeroed === true;
+                    const displayValue = isZeroed ? 0 : (data.value ?? '');
+                    
+                    html += `<td class="table-cell">
+                        <div class="combo-cell">
+                            <button onclick="openNumberModal('${key}','${cat}',${numValue})" 
+                                    class="score-button ${isZeroed ? 'zeroed' : ''}"
+                                    ${isZeroed ? 'disabled' : ''}>
+                                ${displayValue || '—'}
+                            </button>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" 
+                                       ${isZeroed ? 'checked' : ''} 
+                                       onchange="toggleZeroSimple('${key}','${cat}',this.checked)">
+                                <span class="checkbox-label">Zerar</span>
+                            </div>
+                        </div>
+                    </td>`;
+                });
+                html += `</tr>`;
+            });
+
+            // Seção Combinações
+            html += `<tr><td colspan="${gameState.activePlayerKeys.length + 1}" class="section-title">COMBINAÇÕES</td></tr>`;
+            CATEGORIES_COMBINACAO.forEach((cat, idx) => {
+                html += `<tr class="${idx === 0 ? 'separator-row' : ''}">
+                    <td class="category-label">${CATEGORY_LABELS[cat]}</td>`;
+                gameState.activePlayerKeys.forEach(key => {
+                    const data = gameState.scores[key]?.[cat] || { scored: false, bonus: false, zeroed: false };
+                    const isZeroed = data.zeroed === true;
+                    const points = isZeroed ? 0 : (data.scored ? (FIXED_SCORES[cat] + (data.bonus ? 5 : 0)) : 0);
+                    
+                    html += `<td class="table-cell">
+                        <div class="combo-cell">
+                            <div class="combo-points ${isZeroed ? 'zeroed-text' : ''}">${points}</div>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" 
+                                       ${data.scored ? 'checked' : ''} 
+                                       ${isZeroed ? 'disabled' : ''}
+                                       onchange="updateCombo('${key}','${cat}','scored',this.checked)">
+                                <span class="checkbox-label">Feito</span>
+                            </div>
+                            <div class="bonus-checkbox-wrapper ${data.scored && !isZeroed ? 'active' : ''}">
+                                <input type="checkbox" 
+                                       ${data.bonus ? 'checked' : ''} 
+                                       ${!data.scored || isZeroed ? 'disabled' : ''} 
+                                       onchange="updateCombo('${key}','${cat}','bonus',this.checked)">
+                                <span class="bonus-label">+5</span>
+                            </div>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" 
+                                       ${isZeroed ? 'checked' : ''} 
+                                       onchange="toggleZeroCombo('${key}','${cat}',this.checked)">
+                                <span class="checkbox-label">Zerar</span>
+                            </div>
+                        </div>
+                    </td>`;
+                });
+                html += `</tr>`;
+            });
+
+            // Total
+            html += `<tr class="total-final">
+                <td class="rounded-bl-lg">🏆 TOTAL</td>`;
+            gameState.activePlayerKeys.forEach((key, idx) => {
+                const isLast = idx === gameState.activePlayerKeys.length - 1;
+                html += `<td class="text-center ${isLast ? 'rounded-br-lg' : ''}" id="total-${key}">${calculateTotal(key)}</td>`;
+            });
+            html += `</tr>`;
+            
+            tbody.innerHTML = html;
+        }
+
+        window.updateScore = (player, cat, val) => {
+            if (!gameState.scores[player]) gameState.scores[player] = {};
+            gameState.scores[player][cat] = val === '' ? null : parseInt(val);
+            saveAndRender();
+        };
+
+        window.toggleZeroSimple = (player, cat, isZeroed) => {
+            if (!gameState.scores[player]) gameState.scores[player] = {};
+            if (!gameState.scores[player][cat]) gameState.scores[player][cat] = {};
+            gameState.scores[player][cat].zeroed = isZeroed;
+            if (isZeroed) {
+                gameState.scores[player][cat].value = 0;
+            }
+            saveAndRender();
+        };
+
+        window.toggleZeroCombo = (player, cat, isZeroed) => {
+            if (!gameState.scores[player]) gameState.scores[player] = {};
+            if (!gameState.scores[player][cat]) gameState.scores[player][cat] = { scored: false, bonus: false };
+            gameState.scores[player][cat].zeroed = isZeroed;
+            if (isZeroed) {
+                gameState.scores[player][cat].scored = false;
+                gameState.scores[player][cat].bonus = false;
+            }
+            saveAndRender();
+        };
+
+        window.openNumberModal = (player, cat, numValue) => {
+            const modal = document.getElementById('number-modal');
+            const grid = document.getElementById('number-options-grid');
+            
+            modal.dataset.player = player;
+            modal.dataset.category = cat;
+            
+            document.getElementById('modal-title').textContent = `Selecione a pontuação para ${CATEGORY_LABELS[cat]}`;
+            
+            grid.innerHTML = '';
+            for (let i = 0; i <= 5; i++) {
+                const points = i * numValue;
+                const btn = document.createElement('button');
+                btn.className = 'number-option-btn';
+                btn.innerHTML = `<div class="option-dice">${i}×${numValue}</div><div class="option-points">${points} pts</div>`;
+                btn.onclick = () => selectNumberValue(player, cat, points);
+                grid.appendChild(btn);
+            }
+            
+            modal.classList.remove('hidden');
+        };
+
+        window.selectNumberValue = (player, cat, value) => {
+            if (!gameState.scores[player]) gameState.scores[player] = {};
+            if (!gameState.scores[player][cat]) gameState.scores[player][cat] = {};
+            gameState.scores[player][cat].value = value;
+            gameState.scores[player][cat].zeroed = false;
+            document.getElementById('number-modal').classList.add('hidden');
+            saveAndRender();
+        };
+
+        window.closeNumberModal = () => {
+            document.getElementById('number-modal').classList.add('hidden');
+        };
+
+        window.updateCombo = (player, cat, type, val) => {
+            if (!gameState.scores[player]) gameState.scores[player] = {};
+            if (!gameState.scores[player][cat]) gameState.scores[player][cat] = { scored: false, bonus: false, zeroed: false };
+            gameState.scores[player][cat][type] = val;
+            if (type === 'scored' && !val) gameState.scores[player][cat].bonus = false;
+            if (type === 'scored' && val) gameState.scores[player][cat].zeroed = false;
+            saveAndRender();
+        };
+
+        function calculateTotal(player) {
+            let total = 0;
+            const s = gameState.scores[player] || {};
+            
+            CATEGORIES_SIMPLES.forEach(c => {
+                const data = s[c] || {};
+                if (!data.zeroed) {
+                    total += (parseInt(data.value) || 0);
                 }
             });
-            document.getElementById('game-status').innerText = finished ? "STATUS: PARTIDA FINALIZADA" : "STATUS: JOGO EM ANDAMENTO";
-        }
-
-        function renderTable() {
-            const table = document.getElementById('score-table');
-            let html = `<thead><tr><th class="category-header border-r">Categoria</th>`;
-            gameState.activeKeys.forEach(k => html += `<th class="category-header text-center">${gameState.names[k]}</th>`);
-            html += `</tr></thead><tbody>`;
-
-            // Categorias Simples (1s-6s)
-            CAT_SIMPLES.forEach(cat => {
-                html += `<tr><td class="p-2 border-r font-medium text-gray-700">${CAT_LABELS[cat]}</td>`;
-                gameState.activeKeys.forEach(p => {
-                    const score = gameState.scores[p]?.[cat];
-                    const isZero = score === 0;
-                    const val = (score === null || score === undefined || isZero) ? '' : score;
-                    const isValid = validateSimple(cat, val);
-
-                    html += `<td class="p-1">
-                        <div class="flex items-center gap-1">
-                            <input type="checkbox" onchange="toggleZeroSimple('${p}','${cat}',this.checked)" ${isZero?'checked':''} class="w-4 h-4 cursor-pointer">
-                            <span class="zero-label">0</span>
-                            <input type="number" oninput="updateSimple('${p}','${cat}',this.value)" value="${val}" ${isZero?'disabled':''} 
-                                class="score-input ${(!isValid && val !== '') ? 'invalid' : ''}" placeholder="-">
-                        </div>
-                    </td>`;
-                });
-                html += `</tr>`;
-            });
-
-            // Categorias Combinação
-            CAT_COMBO.forEach((cat, idx) => {
-                html += `<tr class="${idx === 0 ? 'separator-row' : ''}"><td class="p-2 border-r font-medium text-gray-700">${CAT_LABELS[cat]}</td>`;
-                gameState.activeKeys.forEach(p => {
-                    const d = gameState.scores[p]?.[cat] || { scored: false, bonus: false, cancelled: false };
-                    const pts = d.cancelled ? 0 : (d.scored ? (FIXED_SCORES[cat] + (d.bonus ? 5 : 0)) : 0);
-
-                    html += `<td class="p-1">
-                        <div class="flex items-center justify-between px-1">
-                            <div class="flex items-center gap-0.5">
-                                <input type="checkbox" ${d.cancelled?'checked':''} onchange="updateCombo('${p}','${cat}','cancelled',this.checked)" class="w-4 h-4 cursor-pointer">
-                                <span class="zero-label">0</span>
-                            </div>
-                            <span class="font-bold text-sm w-6 text-center">${pts}</span>
-                            <input type="checkbox" ${d.scored?'checked':''} ${d.cancelled?'disabled':''} onchange="updateCombo('${p}','${cat}','scored',this.checked)" class="w-5 h-5 cursor-pointer">
-                            <div class="flex items-center">
-                                <input type="checkbox" ${d.bonus?'checked':''} ${(!d.scored || d.cancelled)?'disabled':''} onchange="updateCombo('${p}','${cat}','bonus',this.checked)" class="w-4 h-4 cursor-pointer">
-                                <span class="bonus-label ml-0.5">+5</span>
-                            </div>
-                        </div>
-                    </td>`;
-                });
-                html += `</tr>`;
-            });
-
-            // Linha Total
-            html += `<tr class="total-final"><td class="p-2 border-r">TOTAL FINAL</td>`;
-            gameState.activeKeys.forEach(p => html += `<td class="text-center font-bold">${calculateTotal(p)}</td>`);
-            html += `</tr></tbody>`;
-            table.innerHTML = html;
-        }
-
-        // --- Funções de Validação e Cálculo ---
-        function validateSimple(cat, val) {
-            if (val === '' || val === null) return true;
-            const n = parseInt(val);
-            const b = CAT_VAL[cat];
-            return n % b === 0 && n <= (b * 5) && n > 0;
-        }
-
-        window.toggleZeroSimple = (p, cat, checked) => {
-            if (!gameState.scores[p]) gameState.scores[p] = {};
-            gameState.scores[p][cat] = checked ? 0 : null;
-            saveAndRender();
-        };
-
-        window.updateSimple = (p, cat, val) => {
-            if (!gameState.scores[p]) gameState.scores[p] = {};
-            gameState.scores[p][cat] = val === '' ? null : parseInt(val);
-            saveAndRender();
-        };
-
-        window.updateCombo = (p, cat, field, val) => {
-            if (!gameState.scores[p]) gameState.scores[p] = {};
-            if (!gameState.scores[p][cat]) gameState.scores[p][cat] = { scored: false, bonus: false, cancelled: false };
             
-            gameState.scores[p][cat][field] = val;
-            if (field === 'cancelled' && val) {
-                gameState.scores[p][cat].scored = false;
-                gameState.scores[p][cat].bonus = false;
-            }
-            if (field === 'scored' && !val) gameState.scores[p][cat].bonus = false;
-            saveAndRender();
-        };
-
-        function calculateTotal(p) {
-            let t = 0;
-            const s = gameState.scores[p] || {};
-            CAT_SIMPLES.forEach(c => { if(validateSimple(c, s[c])) t += (parseInt(s[c]) || 0); });
-            CAT_COMBO.forEach(c => {
-                const d = s[c];
-                if (d?.scored && !d?.cancelled) t += (FIXED_SCORES[c] + (d.bonus ? 5 : 0));
+            CATEGORIES_COMBINACAO.forEach(c => {
+                const data = s[c] || {};
+                if (!data.zeroed && data.scored) {
+                    total += (FIXED_SCORES[c] + (data.bonus ? 5 : 0));
+                }
             });
-            return t;
+            
+            return total;
         }
 
         function resetGame() {
-            if (confirm("Deseja apagar os dados e reiniciar?")) {
-                localStorage.removeItem('general_v1_rules');
+            if(confirm("⚠️ Deseja zerar o placar e voltar para o início? Esta ação não pode ser desfeita!")) {
+                localStorage.removeItem('general_game');
                 location.reload();
             }
         }
